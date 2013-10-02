@@ -23,7 +23,7 @@
 
 (defn setup []
   (q/smooth)
-  (q/frame-rate 20))
+  (q/frame-rate 20)) ;; normally 20
 
 (defn draw-grid []
   (apply q/stroke (colors :grid))
@@ -112,13 +112,16 @@
                                    (count @b/seq-beats-atom)))
   (q/pop-matrix))
 
+(def do-dump false)
+
 (defn draw []
   (draw-background)
   (when @b/active-atom
     (draw-note-highlights)
     (draw-grid)
     (draw-notes)
-    (draw-time)))
+    (draw-time))
+  (if do-dump (q/save-frame "beatr-dump-###.png")))
 
 (defn run []
   (q/defsketch doodle :title "beatr" :setup setup :draw draw :size [640 480])

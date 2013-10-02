@@ -6,7 +6,23 @@ A server-side Overtone beat-box that easily handles polyrhythms.
 
 ## Usage
 
-Read the source, Luke.
+Check out the examples in the src/beatr/core.clj directory.  Beatr is meant to be used via the repl.
+
+In a nutshell:
+
+```clj
+;; start 4 sequences that fit in 4 seconds
+;; each sequence has a different number of beats
+(b/start 4
+         [16     12     12          8]
+         [kick-s kick-s close-hihat open-hihat])
+
+;; add triggers like you see in the animation above
+(b/set-seq-buf 0 [0 0 1 0 0 0 1 0 0 0 1 0 0 0 1 0])
+(b/set-seq-buf 1 [1 0 1 0 1 0 1 0 1 0 1 0])
+(b/set-seq-buf 2 [0 1 0 0 0 1 0 0 0 1 0 0])
+(b/set-seq-buf 3 [0 0 1 1 0 0 1 1])
+```
 
 ## License
 

@@ -11,9 +11,9 @@ Check out the examples in the src/beatr/core.clj directory.  Beatr is meant to b
 In a nutshell:
 
 ```clj
-;; start 4 sequences that fit in 4 seconds
+;; start 4 sequences that fit in 4.5 seconds
 ;; each sequence has a different number of beats
-(b/start 4
+(b/start 4.5
          [16     12     12          8]
          [kick-s kick-s close-hihat open-hihat])
 

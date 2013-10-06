@@ -1,27 +1,32 @@
 # beatr
 
-A server-side Overtone beat-box that easily handles polyrhythms.
+A Overtone beat-box that easily handles polyrhythms and displays the
+beats in a Quil GUI.  Timing is done on the Supercollider server side
+a la Sam Aaron's
+[internal_sequencer](https://github.com/overtone/overtone/blob/master/src/overtone/examples/timing/internal_sequencer.clj)
+example.  Note that beatr is meant to be used via the repl, not via
+GUI input.
 
 ![Screenshot](https://github.com/rogerallen/beatr/raw/master/beatr-anim.gif)
 
 ## Usage
 
-Check out the examples in the src/beatr/core.clj directory.  Beatr is meant to be used via the repl.
+Check out the examples in the src/beatr/core.clj directory.
 
 In a nutshell:
 
 ```clj
-;; start 4 sequences that fit in 4.5 seconds
+;; start an array of 4 sequences that fit in 4.5 seconds
 ;; each sequence has a different number of beats
-(b/start 4.5
-         [16     12     12          8]
-         [kick-s kick-s close-hihat open-hihat])
+(b/restart 4.5
+           [16     12     12          8]
+           [kick-s kick-s close-hihat open-hihat])
 
 ;; add triggers like you see in the animation above
-(b/set-seq-buf 0 [0 0 1 0 0 0 1 0 0 0 1 0 0 0 1 0])
-(b/set-seq-buf 1 [1 0 1 0 1 0 1 0 1 0 1 0])
-(b/set-seq-buf 2 [0 1 0 0 0 1 0 0 0 1 0 0])
-(b/set-seq-buf 3 [0 0 1 1 0 0 1 1])
+(b/beats 0 [0 0 1 0 0 0 1 0 0 0 1 0 0 0 1 0])
+(b/beats 1 [1 0 1 0 1 0 1 0 1 0 1 0])
+(b/beats 2 [0 1 0 0 0 1 0 0 0 1 0 0])
+(b/beats 3 [0 0 1 1 0 0 1 1])
 ```
 
 ## License

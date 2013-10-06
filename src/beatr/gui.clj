@@ -44,7 +44,7 @@
   (q/pop-matrix))
 
 (defn draw-note-highlights []
-  (let [cur-time (b/get-root-cnt)]
+  (let [cur-time (b/ticks)]
     (let [grid-max-time (* b/DEFAULT-ROOT-RATE @b/seq-secs-atom)
           time-x (/ (mod cur-time grid-max-time) grid-max-time)
           playing-cells (apply vector (map #(int (* time-x %)) @b/seq-beats-atom))]
@@ -84,7 +84,7 @@
   (q/pop-matrix))
 
 (defn draw-time []
-  (let [cur-time (b/get-root-cnt)]
+  (let [cur-time (b/ticks)]
     (let [ grid-max-time (* b/DEFAULT-ROOT-RATE @b/seq-secs-atom)
           time-x (* (/ (mod cur-time grid-max-time) grid-max-time)
                     (layout :grid-width))
@@ -124,5 +124,5 @@
   (if do-dump (q/save-frame "beatr-dump-###.png")))
 
 (defn run []
-  (q/defsketch doodle :title "beatr" :setup setup :draw draw :size [640 480])
+  (q/defsketch doodle :title "beatr" :setup setup :draw draw :size [640 240])
   nil)

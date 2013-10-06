@@ -6,7 +6,7 @@
 ;; This file just shows what you can do with beatr
 
 ;; ======================================================================
-;; start the gui
+;; start the gui (won't be very exciting until later...)
 (comment
   (bg/run)
 )
@@ -27,90 +27,79 @@
 (comment
 
   ;; be like every other drum machine ...
-  (b/start 4
-           [16 16 16]
-           [kick-s open-hihat close-hihat])
+  (b/restart 4
+             [16 16 16]
+             [kick-s open-hihat close-hihat])
 
   ;; give it a beat
   (do
-    ;;                                  1 1 1 1 1 1 1
-    ;;                1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6
-    (b/set-seq-buf 0 [1 0 0 0 1 0 0 0 1 0 0 0 1 0 0 0])
-    (b/set-seq-buf 1 [0 0 1 0 0 0 1 0 0 0 1 0 0 0 1 0])
-    (b/set-seq-buf 2 [0 0 0 1 0 0 0 1 0 0 0 1 0 0 0 1])
+    ;;                            1 1 1 1 1 1 1
+    ;;          1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6
+    (b/beats 0 [1 0 0 0 1 0 0 0 1 0 0 0 1 0 0 0])
+    (b/beats 1 [0 0 1 0 0 0 1 0 0 0 1 0 0 0 1 0])
+    (b/beats 2 [0 0 0 1 0 0 0 1 0 0 0 1 0 0 0 1])
     )
 
   ;; change it a bit
-  (b/set-seq-buf 2 [0 0 1 1 0 0 1 1 0 1 0 1 0 1 0 1])
+  (b/beats 2 [0 0 1 1 0 0 1 1 0 1 0 1 0 1 0 1])
 
   ;; ======================================================================
 
   ;; okay, let's be polyrhythmic
-  (b/start 4
-           [16     12     12          8]
-           [kick-s kick-s close-hihat open-hihat])
+  (b/restart 4
+             [16     12     12          8]
+             [kick-s kick-s close-hihat open-hihat])
 
   (do
-    ;;                                1 1 1 1 1 1 1
-    ;;              1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6
-    (b/set-seq-buf 0 [1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0])
-    (b/set-seq-buf 1 [1 0 1 0 1 0 1 0 1 0 1 0])
-    (b/set-seq-buf 2 [0 1 0 1 0 1 0 1 0 1 0 1])
-    (b/set-seq-buf 3 [0 1 0 1 0 1 0 1])
+    (b/beats 0 [1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0])
+    (b/beats 1 [1 0 1 0 1 0 1 0 1 0 1 0])
+    (b/beats 2 [0 1 0 1 0 1 0 1 0 1 0 1])
+    (b/beats 3 [0 1 0 1 0 1 0 1])
     )
 
   (do
-    ;;                                1 1 1 1 1 1 1
-    ;;              1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6
-    (b/set-seq-buf 0 [1 0 0 0 1 0 0 0 1 0 0 0 1 0 0 0])
-    (b/set-seq-buf 1 [1 0 0 0 1 0 0 0 1 0 0 0])
-    (b/set-seq-buf 2 [0 0 0 1 0 0 0 1 0 0 0 1])
-    (b/set-seq-buf 3 [0 1 0 1 0 0 0 1])
+    (b/beats 0 [1 0 0 0 1 0 0 0 1 0 0 0 1 0 0 0])
+    (b/beats 1 [1 0 0 0 1 0 0 0 1 0 0 0])
+    (b/beats 2 [0 0 0 1 0 0 0 1 0 0 0 1])
+    (b/beats 3 [0 1 0 1 0 0 0 1])
     )
 
   (do
-    ;;                                1 1 1 1 1 1 1
-    ;;              1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6
-    (b/set-seq-buf 0 [0 0 1 0 0 0 1 0 0 0 1 0 0 0 1 0])
-    (b/set-seq-buf 1 [1 0 1 0 1 0 1 0 1 0 1 0])
-    (b/set-seq-buf 2 [0 1 0 0 0 1 0 0 0 1 0 0])
-    (b/set-seq-buf 3 [0 0 1 1 0 0 1 1])
+    (b/beats 0 [0 0 1 0 0 0 1 0 0 0 1 0 0 0 1 0])
+    (b/beats 1 [1 0 1 0 1 0 1 0 1 0 1 0])
+    (b/beats 2 [0 1 0 0 0 1 0 0 0 1 0 0])
+    (b/beats 3 [0 0 1 1 0 0 1 1])
     )
 
   ;; adjust tempo via
-  (o/ctl @b/root-trg-atom :rate 240)
-  (o/ctl @b/root-trg-atom :rate 120)
+  (b/tick-rate 180)
+  (b/tick-rate 120) ; default
 
   ;; adjust sound via
-  (b/set-seq-ctl 1 :sample-buf clap)
-  (b/set-seq-ctl 1 :amp 0.25)
-  (b/set-seq-ctl 1 :sample-rate 1.5)
-
+  (b/ctl 1 :sample-buf clap)
+  (b/ctl 1 :amp 0.25)
+  (b/ctl 1 :sample-rate 1.5)
 
   ;; ======================================================================
 
-  (b/start 4
-           [12     12          8]
-           [kick-s close-hihat kick-s])
+  (b/restart 4
+             [12     12          8]
+             [kick-s close-hihat kick-s])
 
   (do
-    ;;                                1 1 1
-    ;;              1 2 3 4 5 6 7 8 9 0 1 2
-    (b/set-seq-buf 0 [1 0 1 0 1 0 1 0 1 0 1 0])
-    (b/set-seq-buf 1 [0 1 0 1 0 1 0 1 0 1 0 1])
-    (b/set-seq-buf 2 [1 0 1 0 1 0 1 0])
+    (b/beats 0 [1 0 1 0 1 0 1 0 1 0 1 0])
+    (b/beats 1 [0 1 0 1 0 1 0 1 0 1 0 1])
+    (b/beats 2 [1 0 1 0 1 0 1 0])
     )
 
   (do
-    ;;                                1 1 1
-    ;;              1 2 3 4 5 6 7 8 9 0 1 2
-    (b/set-seq-buf 0 [1 0 0 1 1 0 1 0 1 0 0 1])
-    (b/set-seq-buf 1 [0 1 0 0 1 1 0 1 0 0 1 1])
-    (b/set-seq-buf 2 [1 0 1 1 0 1 0 1])
+    (b/beats 0 [1 0 0 1 1 0 1 0 1 0 0 1])
+    (b/beats 1 [0 1 0 0 1 1 0 1 0 0 1 1])
+    (b/beats 2 [1 0 1 1 0 1 0 1])
     )
 
   ;; what time is it?
-  (b/get-root-cnt)
+  (b/ticks)
 
   ;; stop the noise!
   (b/stop)

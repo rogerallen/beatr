@@ -88,35 +88,40 @@
 (defonce active-atom (atom false)) ; is the sequence ready & active?
 
 ;; ======================================================================
-;; "public" api
-;;   restart
-;;   set-seq-ctl
-;;   set-seq-buf
-(defn get-root-cnt []
-  (if-not (nil? @root-cnt-atom)
-    @(get-in @root-cnt-atom [:taps "cur-root-cnt"])
-    0.0))
-;;(get-root-cnt)
+;; Public API routines.
 
-;; FIXME – this leaks the old array of synths
-(defn start [seq-seconds
-               beat-seq-beats
-               beat-seq-synths]
+;; FIXME – I think this leaks the old array of synths
+(defn restart
+  "Setup an array of sequences.  The seconds arg tells how long
+   all the sequences in the array lasts.  Each sequence can have a
+   different number of beats in order to play polyrhythmic beats.  The
+   seq-beats arg is a vector of the number of beats in each sequence.
+   The seq-synths arg is a vector of Overtone synths for each
+   sequence.
+
+   Ex: (start 4 [16 12] [bass-drum snare-drum])
+
+   is an array of beats that repeats after 4 seconds.  The bass-drum
+   sequence has 16 beats over 4 seconds (240bpm) and the snare-drum
+   has 12 beats over 4 seconds for 180bpm."
+  [seconds
+   seq-beats
+   seq-synths]
   (swap! active-atom (fn [_] false))
   (o/stop) ;; kill anything currently playing on the server
-  (let [beat-set (apply vector (sort (set beat-seq-beats)))]
+  (let [beat-set (apply vector (sort (set seq-beats)))]
     (assert (>= MAX-BEAT-BUSES (count beat-set)))
-    (assert (= (count beat-seq-beats) (count beat-seq-synths)))
+    (assert (= (count seq-beats) (count seq-synths)))
 
-    (swap! seq-secs-atom (fn [_] seq-seconds))
-    (swap! seq-beats-atom (fn [_] beat-seq-beats))
+    (swap! seq-secs-atom (fn [_] seconds))
+    (swap! seq-beats-atom (fn [_] seq-beats))
     (swap! root-trg-atom (fn [_] (root-trg-synth)))
     (swap! root-cnt-atom (fn [_] (root-cnt-synth)))
     (swap! beat-trgs-atom
            (fn [_] (dovec (for [i (range (count beat-set))]
                            (let [beat-trg-bus (nth beat-trg-buses i)
                                  num-beats    (nth beat-set i)
-                                 cur-divisor  (get-rate-divisor num-beats seq-seconds DEFAULT-ROOT-RATE)]
+                                 cur-divisor  (get-rate-divisor num-beats seconds DEFAULT-ROOT-RATE)]
                              (beat-trg-synth beat-trg-bus cur-divisor))))))
     (swap! beat-cnts-atom
            (fn [_] (dovec (for [i (range (count beat-set))]
@@ -124,19 +129,19 @@
                                  beat-cnt-bus (nth beat-cnt-buses i)]
                              (beat-cnt-synth beat-cnt-bus beat-trg-bus))))))
     (swap! seq-bufs-atom
-           (fn [_] (dovec (for [num-beats beat-seq-beats]
+           (fn [_] (dovec (for [num-beats seq-beats]
                            (o/buffer num-beats)))))
     (swap! seq-vecs-atom
-           (fn [_] (dovec (for [num-beats beat-seq-beats]
+           (fn [_] (dovec (for [num-beats seq-beats]
                            (apply vector (repeat num-beats 0))))))
 
     (swap! synth-seqs-atom
-           (fn [_] (dovec (for [[seq-index num-beats] (map-indexed vector beat-seq-beats)]
+           (fn [_] (dovec (for [[seq-index num-beats] (map-indexed vector seq-beats)]
                            (let [beat-index (.indexOf beat-set num-beats)
                                  seq-buf      (nth @seq-bufs-atom seq-index)
                                  beat-cnt-bus (nth beat-cnt-buses beat-index)
                                  beat-trg-bus (nth beat-trg-buses beat-index)
-                                 synth        (nth beat-seq-synths seq-index)]
+                                 synth        (nth seq-synths seq-index)]
                              (dovec
                               (for [k (range num-beats)]
                                 (mono-sample-beat-synth
@@ -148,17 +153,39 @@
                                  :sample-buf   synth)))))))))
   (swap! active-atom (fn [_] true)))
 
-(defn set-seq-ctl
+(defn ctl
+  "send a ctl key value pair to the seq-index synth in the array.
+   Ex: (ctl 3 :sample-buf clap)"
   [seq-index key value]
   (doall (map #(o/ctl % key value) (@synth-seqs-atom seq-index)))
   nil)
 
-(defn set-seq-buf
+(defn beats
+  "send an array of beats to the nth sequence in the array.  1
+  indicates a 'beat' and 0 indicates no 'beat'
+  Ex: (beats 1 [0 0 1 1 0 0 1 0])"
   [seq-index new-buf]
+  (assert (< seq-index (count @seq-beats-atom)))
+  (assert (= (count new-buf) (nth @seq-beats-atom seq-index)))
   (o/buffer-write! (nth @seq-bufs-atom seq-index) new-buf)
-  (swap! seq-vecs-atom (fn [xs]
-                         (assoc xs seq-index new-buf)))
+  (swap! seq-vecs-atom (fn [xs] (assoc xs seq-index new-buf)))
   nil)
 
-(defn stop []
+(defn ticks
+  "return the current value of the root-cnt-atom a/k/a the 'tick' that
+  all other timing is based upon.  Returns 0.0 if nothing is running."
+  []
+  (if-not (nil? @root-cnt-atom)
+    @(get-in @root-cnt-atom [:taps "cur-root-cnt"])
+    0.0))
+
+(defn tick-rate
+  "Set the root tick rate.  The default rate is 120Hz."
+  [hz]
+  (o/ctl @root-trg-atom :rate hz))
+
+;; FIXME -- pause instead of stop?
+(defn stop
+  "stop Overtone"
+  []
   (o/stop))

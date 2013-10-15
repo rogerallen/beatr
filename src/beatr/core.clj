@@ -101,6 +101,29 @@
   ;; what time is it?
   (b/ticks)
 
+  ;; ======================================================================
+
+  ;; Try the new hotness...TB-303 clone
+  (b/restart 4 [16 16] [b/beatr-303-synth kick-s])
+
+  ;; give it a beat
+  (do
+    ;;                                     1  1  1  1  1  1  1
+    ;;          1  2  3  4  5  6  7  8  9  0  1  2  3  4  5  6
+    (b/beats 0 [40 44 32 42 40 47 40 42 32 44 40 42 40 47 32 42])
+    (b/beats 1 [ 1  0  1  1  1  0  0  0  1  0  0  0  1  0  1  1])
+    )
+
+  (b/beats 0 [40 32 37 42 32 37  0  0 40 32 37 42 32 37  0 32])
+
+  ;; try out the TB-303 controls
+  (b/ctl 0 :wave 1)
+  (b/ctl 0 :cutoff 800)
+  (b/ctl 0 :env 2600)
+  (b/ctl 0 :res 0.7)
+  (b/ctl 0 :sus 0.2)
+  (b/ctl 0 :dec 2.1)
+
   ;; stop the noise!
   (b/stop)
 

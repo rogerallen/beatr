@@ -15,6 +15,7 @@
   [num-beats seq-len-in-seconds root-rate-in-hz]
   (let [bps (/ num-beats seq-len-in-seconds)]
     (/ root-rate-in-hz bps)))
+;; (get-rate-divisor 3 4 315)
 
 ;; put global metronome pulse on root-trg-bus
 (defonce root-trg-bus (o/control-bus))
@@ -69,8 +70,57 @@
          (* vol amp
             (o/pan2 (o/scaled-play-buf 1 sample-buf sample-rate this-beat-trg))))))
 
+;; TB-303 clone starting point from Dan Stowell
+;; http://permalink.gmane.org/gmane.comp.audio.supercollider.user/22591
+;; SynthDef("sc303", { arg out=0, freq=440, wave=0, ctf=100, res=0.2,
+;; 		sus=0, dec=1.0, env=1000, gate=0, vol=0.2;
+;; 	var filEnv, volEnv, waves;
+;;
+;; 	// can't use adsr with exp curve???
+;; 	//volEnv = EnvGen.ar(Env.adsr(1, 0, 1, dec, vol, 'exp'), In.kr(bus));
+;; 	volEnv = EnvGen.ar(Env.new([10e-10, 1, 1, 10e-10], [0.01, sus, dec], 'exp'), gate);
+;; 	filEnv = EnvGen.ar(Env.new([10e-10, 1, 10e-10], [0.01, dec], 'exp'), gate);
+;;
+;; 	waves = [Saw.ar(freq, volEnv), Pulse.ar(freq, 0.5, volEnv)];
+;;
+;; 	Out.ar(out, RLPF.ar( Select.ar(wave, waves), ctf + (filEnv * env), res).dup * vol);
+;; }).send(s);
+
+(o/defsynth beatr-303-synth
+  "Plays a TB-303 clone. http://en.wikipedia.org/wiki/Roland_TB-303"
+  [beat-num     0 ; the beat number of this synth
+   beat-buf     0 ; the buffer of all beats 0=off, N=on and N is midi note value
+   seq-beats    8 ; the number of beats in a sequence
+   beat-cnt-bus 0 ; the beat count bus
+   beat-trg-bus 0 ; the beat trigger bus
+   amp          1 ; output volume
+   ;; TB-303 controls...
+   wave         0 ; 0=tri,1=square
+   cutoff       100
+   env          1000
+   res          0.2
+   sus          0
+   dec          1.0
+   out-bus      0]
+  (let [cnt           (o/in:kr beat-cnt-bus)
+        beat-trg      (o/in:kr beat-trg-bus)
+        note-val      (o/buf-rd:kr 1 beat-buf cnt)
+        freq-val      (o/midicps note-val)
+        this-beat-trg (and (> note-val 0)
+                           (= beat-num (mod cnt seq-beats))
+                           beat-trg)
+        vol           (o/set-reset-ff this-beat-trg)
+        ;; tb303...
+        vol-env (o/env-gen (o/envelope [10e-10, 1, 1, 10e-10] [0.01, sus, dec] :exp) this-beat-trg)
+        filter-env (o/env-gen (o/envelope [10e-10, 1, 10e-10] [0.01, dec] :exp) this-beat-trg)
+        waves   [(* (o/saw freq-val) vol-env) (* (o/pulse freq-val 0.5) vol-env)]
+        tb303   (o/rlpf (o/select wave waves) (+ cutoff (* filter-env env)) res)
+        ]
+    (o/out out-bus (* vol amp (o/pan2 tb303)))))
+
 ;; ======================================================================
 ;; control atoms
+(defonce root-rate-atom (atom DEFAULT-ROOT-RATE))
 (defonce root-trg-atom (atom nil)) ; will contain the synth driving the root-trg-bus
 (defonce root-cnt-atom (atom nil)) ; will contain the synth driving the root-cnt-bus
 (defonce beat-trgs-atom (atom [])) ; will contain a list of synths driving the beat-trg-buses
@@ -115,13 +165,13 @@
 
     (swap! seq-secs-atom (fn [_] seconds))
     (swap! seq-beats-atom (fn [_] seq-beats))
-    (swap! root-trg-atom (fn [_] (root-trg-synth)))
+    (swap! root-trg-atom (fn [_] (root-trg-synth @root-rate-atom)))
     (swap! root-cnt-atom (fn [_] (root-cnt-synth)))
     (swap! beat-trgs-atom
            (fn [_] (dovec (for [i (range (count beat-set))]
                            (let [beat-trg-bus (nth beat-trg-buses i)
                                  num-beats    (nth beat-set i)
-                                 cur-divisor  (get-rate-divisor num-beats seconds DEFAULT-ROOT-RATE)]
+                                 cur-divisor  (get-rate-divisor num-beats seconds @root-rate-atom)]
                              (beat-trg-synth beat-trg-bus cur-divisor))))))
     (swap! beat-cnts-atom
            (fn [_] (dovec (for [i (range (count beat-set))]
@@ -141,16 +191,25 @@
                                  seq-buf      (nth @seq-bufs-atom seq-index)
                                  beat-cnt-bus (nth beat-cnt-buses beat-index)
                                  beat-trg-bus (nth beat-trg-buses beat-index)
-                                 synth        (nth seq-synths seq-index)]
+                                 synth        (nth seq-synths seq-index)
+                                 play-sample? (= (type synth) overtone.sc.sample.PlayableSample)
+                                                ]
                              (dovec
                               (for [k (range num-beats)]
-                                (mono-sample-beat-synth
-                                 :beat-num     k
-                                 :beat-buf     seq-buf
-                                 :seq-beats    num-beats
-                                 :beat-cnt-bus beat-cnt-bus
-                                 :beat-trg-bus beat-trg-bus
-                                 :sample-buf   synth)))))))))
+                                (if play-sample?
+                                  (mono-sample-beat-synth
+                                   :beat-num     k
+                                   :beat-buf     seq-buf
+                                   :seq-beats    num-beats
+                                   :beat-cnt-bus beat-cnt-bus
+                                   :beat-trg-bus beat-trg-bus
+                                   :sample-buf   synth)
+                                  (synth
+                                   :beat-num     k
+                                   :beat-buf     seq-buf
+                                   :seq-beats    num-beats
+                                   :beat-cnt-bus beat-cnt-bus
+                                   :beat-trg-bus beat-trg-bus))))))))))
   (swap! active-atom (fn [_] true)))
 
 (defn ctl
@@ -182,6 +241,7 @@
 (defn tick-rate
   "Set the root tick rate.  The default rate is 120Hz."
   [hz]
+  (swap! root-rate-atom (fn [_] hz))
   (o/ctl @root-trg-atom :rate hz))
 
 ;; FIXME -- pause instead of stop?

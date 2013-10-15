@@ -45,7 +45,7 @@
 
 (defn draw-note-highlights []
   (let [cur-time (b/ticks)]
-    (let [grid-max-time (* b/DEFAULT-ROOT-RATE @b/seq-secs-atom)
+    (let [grid-max-time (* @b/root-rate-atom @b/seq-secs-atom)
           time-x (/ (mod cur-time grid-max-time) grid-max-time)
           playing-cells (apply vector (map #(int (* time-x %)) @b/seq-beats-atom))]
       (apply q/stroke (colors :play))
@@ -77,7 +77,7 @@
            note-size (min note-width note-height)]
        (doall
         (dotimes [j num-beats]
-          (when (= 1 ((@b/seq-vecs-atom i) j))
+          (when (> ((@b/seq-vecs-atom i) j) 0)
             (q/ellipse (+ (* 0.5 cell-width) (* j cell-width)) (* 0.5 (layout :cell-height))
                        note-size note-size)))))
      (q/translate 0 (layout :cell-height))))
@@ -85,7 +85,7 @@
 
 (defn draw-time []
   (let [cur-time (b/ticks)]
-    (let [ grid-max-time (* b/DEFAULT-ROOT-RATE @b/seq-secs-atom)
+    (let [ grid-max-time (* @b/root-rate-atom @b/seq-secs-atom)
           time-x (* (/ (mod cur-time grid-max-time) grid-max-time)
                     (layout :grid-width))
           time-x (+ time-x (layout :grid-offset))]

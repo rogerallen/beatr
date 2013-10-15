@@ -13,6 +13,8 @@ GUI input.
 
 Check out the examples in the src/beatr/core.clj directory.
 
+NEW!  Try out the TB-303 clone synth!
+
 In a nutshell:
 
 ```clj

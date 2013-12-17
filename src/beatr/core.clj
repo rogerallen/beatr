@@ -20,11 +20,42 @@
 (def close-hihat (o/sample (o/freesound-path 802)))
 (def open-hihat (o/sample (o/freesound-path 26657)))
 (def clap (o/sample (o/freesound-path 48310)))
+(def clap2 (o/sample (o/freesound-path 132676)))
 (def gshake (o/sample (o/freesound-path 113625)))
 
 ;; ======================================================================
 ;; doodle around...
 (comment
+
+  ;; Steve Reich "Clapping Music" example
+  (defn rot
+    "rotate a pattern by n"
+    [pat n]
+    (apply vector (take (count pat) (drop n (cycle pat)))))
+  ;; (def pat [1 1 1 0 1 1 0 1 0 1 1 0]) the original pattern
+  ;; well, how hard could this be?  :^) it's pi!
+  (def pat [1 1 1 0 1 0 1 1 1 1 0 1])
+  (def rotpat (partial rot pat))
+  (b/restart 2 [(count pat) (count pat)] [clap clap2])
+  (do
+    (b/beats 0 pat)
+    (b/beats 1 pat))
+  ;; and change these in time...
+  (b/beats 1 (rotpat 1))
+  (b/beats 1 (rotpat 2))
+  (b/beats 1 (rotpat 3))
+  (b/beats 1 (rotpat 4))
+  (b/beats 1 (rotpat 5))
+  (b/beats 1 (rotpat 6))
+  (b/beats 1 (rotpat 7))
+  (b/beats 1 (rotpat 8))
+  (b/beats 1 (rotpat 9))
+  (b/beats 1 (rotpat 10))
+  (b/beats 1 (rotpat 11))
+  (b/beats 1 (rotpat 12))
+  (b/stop)
+
+  ;; ======================================================================
 
   ;; be like every other drum machine ...
   (b/restart 4
@@ -121,7 +152,7 @@
   (b/ctl 0 :cutoff 800)
   (b/ctl 0 :env 2600)
   (b/ctl 0 :res 0.7)
-  (b/ctl 0 :sus 0.2)
+  (b/ctl 0 :sus 0.1)
   (b/ctl 0 :dec 2.1)
 
   ;; stop the noise!

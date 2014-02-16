@@ -1,6 +1,7 @@
 (ns beatr.core
   (:require [overtone.live :as o]
             [beatr.beatr :as b]
+            [beatr.euclidian :as e]
             [beatr.gui :as bg]))
 
 ;; This file just shows what you can do with beatr
@@ -26,6 +27,27 @@
 ;; ======================================================================
 ;; doodle around...
 (comment
+
+  ;; ======================================================================
+  ;; euclidian rhythms examples
+  (b/restart 3 [12 12 8] [clap clap2 click-s])
+
+  ;; play with the active beats and rotations here
+  (b/beats 0 (e/euclidian-rhythm 5 12 1))
+  (b/beats 1 (e/euclidian-rhythm 7 12 2))
+  (b/beats 2 (e/euclidian-rhythm 3 8 3))
+
+  (b/beats 0 (e/euclidian-rhythm 5 12 0))
+  (b/beats 1 (e/euclidian-rhythm 5 12 1))
+  (b/beats 2 (e/euclidian-rhythm 5 8 0))
+
+  (b/beats 0 (e/euclidian-rhythm 7 12 0))
+  (b/beats 1 (e/euclidian-rhythm 7 12 3))
+  (b/beats 2 (e/euclidian-rhythm 5 8 0))
+
+  (b/stop)
+
+  ;; ======================================================================
 
   ;; Steve Reich "Clapping Music" example
   (defn rot

@@ -139,6 +139,10 @@
 
 ;; ======================================================================
 ;; Public API routines.
+(defn duration
+  "return beat duration in seconds, given the tempo (bpm) and number of beats in a sequence.  E.g. (duration 120 8) => 4.0 seconds."
+  [tempo num-beats]
+  (* num-beats (/ 60.0 tempo)))
 
 ;; FIXME – I think this leaks the old array of synths
 (defn restart
